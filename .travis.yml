@@ -2,16 +2,17 @@
 sudo: false
 cache: bundler
 language: ruby
+rvm:
+- '2.2'
 addons:
   apt:
     packages:
     - libgecode-dev
-rvm:
-- 2.1.4
 env:
   global:
   - USE_SYSTEM_GECODE=true
   - KITCHEN_LOCAL_YAML=.kitchen.travis.yml
+  - secure: lqst12Un4L5SLj0I8VlU7aRwXDoEPemuRcQrP1+wQA8f1YGnxe5fWMnjnWNHi3dsxshYDBZmjyXzKxnju2v7OJdtLNSGcJlFAz/0PwJOwAuM/rFqK/PXMgYZDS2BgvYdsDOEYoVdC8dL7N5Q/Ri3nst4uCThDcv2XX9F7gAAWLc=
 bundler_args: "--binstubs=$PWD/bin --jobs 3 --retry 3"
 script:
 - "./bin/rake spec"
