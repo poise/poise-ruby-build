@@ -16,6 +16,9 @@
 
 
 module PoiseRuby
+  # A plugin for poise-ruby to compile Ruby using ruby-build.
+  #
+  # @since 1.0.0
   module RubyBuild
     autoload :Provider, 'poise_ruby/ruby_build/provider'
     autoload :VERSION, 'poise_ruby/ruby_build/version'
