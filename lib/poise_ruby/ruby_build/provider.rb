@@ -14,12 +14,15 @@
 # limitations under the License.
 #
 
+require 'chef/mixin/shell_out'
+
 require 'poise_ruby/ruby_providers/base'
 
 
 module PoiseRuby
   module RubyBuild
     class Provider < PoiseRuby::RubyProviders::Base
+      include Chef::Mixin::ShellOut
       provides(:ruby_build)
 
       def self.default_inversion_options(node, new_resource)
@@ -32,16 +35,28 @@ module PoiseRuby
       end
 
       def action_install
-        unless ::File.exists?(ruby_binary)
-          converge_by("Installing Ruby #{options['version']} via ruby_build") do
-            notifying_block do
-              create_prefix_directory
-              create_install_directory
-              create_builds_directory
-              install_ruby_build
-              install_dependencies
-              install_ruby
-            end
+        # We assume that if the version_file exists, ruby-build is already
+        # installed. Calling #ruby_definition will shell out to ruby-build.
+        if ::File.exists?(version_file) && IO.read(version_file) == ruby_definition
+          # All set, bail out.
+          return
+        end
+
+        converge_by("Installing Ruby #{options['version'].empty? ? new_resource.name : options['version']} via ruby-build") do
+          notifying_block do
+            create_prefix_directory
+            create_install_directory
+            create_builds_directory
+            install_ruby_build
+            install_dependencies
+            # Possible failed install or a version change. Wipe the existing build.
+            remove_ruby if ::File.exists?(::File.join(options['prefix'], 'builds', new_resource.name))
+          end
+          # Second converge has ruby-build installed so using #ruby_definition
+          # is safe.
+          notifying_block do
+            install_ruby
+            create_version_file
           end
         end
       end
@@ -53,10 +68,25 @@ module PoiseRuby
       end
 
       def ruby_binary
-        ::File.join(options['prefix'], 'builds', options['version'], 'bin', 'ruby')
+        ::File.join(options['prefix'], 'builds', new_resource.name, 'bin', 'ruby')
+      end
+
+      def ruby_definition
+        @ruby_definition ||= begin
+          cmd = shell_out!([::File.join(options['prefix'], 'install', options['install_rev'], 'bin', 'ruby-build'), '--definitions'])
+          version_prefix = options['version']
+          # Default for '', look for MRI 2.x.
+          version_prefix = '2' if version_prefix == ''
+          # Find the last line that starts with the target version.
+          cmd.stdout.split(/\n/).reverse.find {|line| line.start_with?(version_prefix) } || options['version']
+        end
       end
 
       private
+
+      def version_file
+        ::File.join(options['prefix'], 'builds', new_resource.name, 'VERSION')
+      end
 
       def create_prefix_directory
         directory options['prefix'] do
@@ -117,14 +147,23 @@ module PoiseRuby
         end
 
         execute 'ruby-build install' do
-          command [::File.join(options['prefix'], 'install', options['install_rev'], 'bin', 'ruby-build'), options['version'], ::File.join(options['prefix'], 'builds', options['version'])]
+          command [::File.join(options['prefix'], 'install', options['install_rev'], 'bin', 'ruby-build'), ruby_definition, ::File.join(options['prefix'], 'builds', new_resource.name)]
           user 'root'
           environment 'RUBY_CONFIGURE_OPTS' => disable_docs if disable_docs
         end
       end
 
+      def create_version_file
+        file version_file do
+          owner 'root'
+          group 'root'
+          mode '644'
+          content ruby_definition
+        end
+      end
+
       def remove_ruby
-        directory ::File.join(options['prefix'], 'builds', options['version']) do
+        directory ::File.join(options['prefix'], 'builds', new_resource.name) do
           action :delete
         end
       end
