@@ -22,6 +22,6 @@ script:
 - if [ "$TRAVIS_SECURE_ENV_VARS" = true ]; then wget https://get.docker.io/builds/Linux/x86_64/docker-latest
   -O docker; fi
 - if [ "$TRAVIS_SECURE_ENV_VARS" = true ]; then chmod +x docker; fi
-- if [ "$TRAVIS_SECURE_ENV_VARS" = true ]; then ./bin/kitchen test -d always; fi
+- if [ "$TRAVIS_SECURE_ENV_VARS" = true ]; then ./bin/kitchen test -d always -l debug; fi
 gemfile:
 - test/gemfiles/chef-12.gemfile
