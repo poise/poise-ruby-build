@@ -17,7 +17,7 @@ to compile and install Ruby.
 
 ```ruby
 ruby_runtime 'myapp' do
-  provide :ruby_build
+  provider :ruby_build
   version '2.1'
 end
 ```
