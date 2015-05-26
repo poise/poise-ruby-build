@@ -17,7 +17,6 @@
 require 'spec_helper'
 
 describe PoiseRuby::RubyBuild::Provider do
-  let(:chefspec_options) { {log_level: :debug} }
   step_into(:ruby_runtime)
   recipe do
     ruby_runtime '2' do
