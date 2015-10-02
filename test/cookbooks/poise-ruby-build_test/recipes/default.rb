@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+require 'poise_ruby/resources/ruby_runtime_test'
+
 ruby_runtime_test 'ruby_build' do
   version '2.2.2'
   runtime_provider :ruby_build
