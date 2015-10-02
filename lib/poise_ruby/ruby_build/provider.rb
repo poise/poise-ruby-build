@@ -43,47 +43,6 @@ module PoiseRuby
         })
       end
 
-      # `install` action for the `ruby_runtime` resource. Installs ruby-build
-      # and then uses that to install Ruby.
-      #
-      # @return [void]
-      def action_install
-        # We assume that if the version_file exists, ruby-build is already
-        # installed. Calling #ruby_definition will shell out to ruby-build.
-        if ::File.exists?(version_file) && IO.read(version_file) == ruby_definition
-          # All set, bail out.
-          return
-        end
-
-        converge_by("Installing Ruby #{options['version'].empty? ? new_resource.name : options['version']} via ruby-build") do
-          notifying_block do
-            create_prefix_directory
-            create_install_directory
-            create_builds_directory
-            install_ruby_build
-            install_dependencies
-            # Possible failed install or a version change. Wipe the existing build.
-            remove_ruby if ::File.exists?(::File.join(options['prefix'], 'builds', new_resource.name))
-          end
-          # Second converge has ruby-build installed so using #ruby_definition
-          # is safe.
-          notifying_block do
-            install_ruby
-            create_version_file
-          end
-        end
-      end
-
-      # `uninstall` action for the `ruby_runtime` resource. Remove Ruby, but
-      # leave ruby-build installed as it may be shared by other resources.
-      #
-      # @return [void]
-      def action_uninstall
-        notifying_block do
-          remove_ruby
-        end
-      end
-
       # Path to the compiled Ruby binary.
       #
       # @return [String]
@@ -116,6 +75,36 @@ module PoiseRuby
       # @return [String]
       def version_file
         ::File.join(options['prefix'], 'builds', new_resource.name, 'VERSION')
+      end
+
+      # Installs ruby-build and then uses that to install Ruby.
+      #
+      # @return [void]
+      def install_ruby
+        # We assume that if the version_file exists, ruby-build is already
+        # installed. Calling #ruby_definition will shell out to ruby-build.
+        if ::File.exists?(version_file) && IO.read(version_file) == ruby_definition
+          # All set, bail out.
+          return
+        end
+
+        converge_by("Installing Ruby #{options['version'].empty? ? new_resource.name : options['version']} via ruby-build") do
+          notifying_block do
+            create_prefix_directory
+            create_install_directory
+            create_builds_directory
+            install_ruby_build
+            install_dependencies
+            # Possible failed install or a version change. Wipe the existing build.
+            remove_ruby if ::File.exists?(::File.join(options['prefix'], 'builds', new_resource.name))
+          end
+          # Second converge has ruby-build installed so using #ruby_definition
+          # is safe.
+          notifying_block do
+            install_ruby
+            create_version_file
+          end
+        end
       end
 
       # Create the base prefix directory.
@@ -185,7 +174,7 @@ module PoiseRuby
       # Compile Ruby using ruby-build.
       #
       # @return [Chef::Resource::Execute]
-      def install_ruby
+      def build_ruby
         # Figure out the argument to disable docs
         disable_docs = if options['install_doc']
           nil
@@ -216,10 +205,11 @@ module PoiseRuby
         end
       end
 
-      # Delete the compiled Ruby.
+      # Delete the compiled Ruby, but leave ruby-build installed as it may be
+      # shared by other resources.
       #
       # @return [Chef::Resource::Directory]
-      def remove_ruby
+      def uninstall_ruby
         directory ::File.join(options['prefix'], 'builds', new_resource.name) do
           action :delete
         end
