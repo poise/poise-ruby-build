@@ -101,7 +101,7 @@ module PoiseRuby
           # Second converge has ruby-build installed so using #ruby_definition
           # is safe.
           notifying_block do
-            install_ruby
+            build_ruby
             create_version_file
           end
         end
