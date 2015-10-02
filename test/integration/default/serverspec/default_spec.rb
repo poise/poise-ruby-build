@@ -14,10 +14,8 @@
 # limitations under the License.
 #
 
-require 'serverspec'
-set :backend, :exec
+require 'poise_ruby/spec_helper'
 
-describe file('/root/one') do
-  it { is_expected.to be_a_file }
-  its(:content) { are_expected.to eq '2.2.2' }
+describe 'ruby_build provider' do
+  it_should_behave_like 'a ruby_runtime_test', 'ruby_build', '2.2.2'
 end

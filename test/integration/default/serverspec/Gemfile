@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-ruby_runtime_test 'ruby_build' do
-  version '2.2.2'
-  runtime_provider :ruby_build
-end
+source 'https://rubygems.org/'
+
+gem 'poise-ruby-spechelper'
