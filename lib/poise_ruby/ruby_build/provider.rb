@@ -163,7 +163,7 @@ module PoiseRuby
         unless options['version'].start_with?('jruby')
           pkgs = node.value_for_platform_family(
             debian: %w{libreadline6-dev zlib1g-dev libssl-dev libyaml-dev libsqlite3-dev libxml2-dev libxslt1-dev},
-            rhel: %w{tar readline-devel zlib-devel libffi-devel openssl-devel libxml2-devel libxslt-devel},
+            rhel: %w{tar bzip2 readline-devel zlib-devel libffi-devel openssl-devel libxml2-devel libxslt-devel},
             suse: %w{zlib-devel libffi-devel sqlite3-devel libxml2-devel libxslt-devel},
           )
           package pkgs if pkgs
