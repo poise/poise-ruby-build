@@ -96,7 +96,8 @@ module PoiseRuby
             install_ruby_build
             install_dependencies
             # Possible failed install or a version change. Wipe the existing build.
-            remove_ruby if ::File.exists?(::File.join(options['prefix'], 'builds', new_resource.name))
+            # If we weren't going to rebuild, we would have bailed out already.
+            uninstall_ruby
           end
           # Second converge has ruby-build installed so using #ruby_definition
           # is safe.
