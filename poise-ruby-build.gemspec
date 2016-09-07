@@ -40,5 +40,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'berkshelf', '~> 4.0'
   spec.add_development_dependency 'poise-boiler', '~> 1.6'
 
-  spec.metadata['halite_dependencies'] = 'git ~> 4.2, build-essential ~> 2.2'
+  spec.metadata['halite_dependencies'] = 'git ~> 5.0, build-essential ~> 6.0'
 end
