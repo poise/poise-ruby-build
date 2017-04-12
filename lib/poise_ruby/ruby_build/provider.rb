@@ -160,7 +160,7 @@ module PoiseRuby
       # @return [Chef::Resource::Package]
       def install_dependencies
         return if options['no_dependencies']
-        include_recipe 'build-essential'
+        poise_build_essential 'build_essential'
         unless options['version'].start_with?('jruby')
           pkgs = node.value_for_platform_family(
             debian: %w{libreadline6-dev zlib1g-dev libssl-dev libyaml-dev libsqlite3-dev libxml2-dev libxslt1-dev},
