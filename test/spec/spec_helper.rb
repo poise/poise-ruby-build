@@ -16,3 +16,7 @@
 
 require 'poise_boiler/spec_helper'
 require 'poise_ruby/ruby_build'
+require 'poise_ruby/cheftie'
+require 'poise_build_essential/cheftie'
+require 'poise_git/cheftie'
+require 'poise_ruby/ruby_build/cheftie'

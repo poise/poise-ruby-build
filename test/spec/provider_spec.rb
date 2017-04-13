@@ -31,7 +31,7 @@ describe PoiseRuby::RubyBuild::Provider do
   it { is_expected.to create_directory('/opt/ruby_build') }
   it { is_expected.to create_directory('/opt/ruby_build/install') }
   it { is_expected.to create_directory('/opt/ruby_build/builds') }
-  it { is_expected.to sync_git('/opt/ruby_build/install/master') }
+  it { is_expected.to sync_poise_git('/opt/ruby_build/install/master') }
   it { is_expected.to run_execute('ruby-build install').with(command: %w{/opt/ruby_build/install/master/bin/ruby-build 2.2.2 /opt/ruby_build/builds/2}) }
   it { is_expected.to create_file('/opt/ruby_build/builds/2/VERSION').with(content: '2.2.2') }
 end
