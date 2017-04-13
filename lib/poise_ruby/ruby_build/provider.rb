@@ -146,8 +146,7 @@ module PoiseRuby
       #
       # @return [Chef::Resource::Git]
       def install_ruby_build
-        include_recipe 'git' unless options['no_dependencies']
-        git ::File.join(options['prefix'], 'install', options['install_rev']) do
+        poise_git ::File.join(options['prefix'], 'install', options['install_rev']) do
           repository options['install_repo']
           revision options['install_rev']
           user 'root'
