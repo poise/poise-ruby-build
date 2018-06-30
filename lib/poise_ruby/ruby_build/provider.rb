@@ -40,6 +40,7 @@ module PoiseRuby
           install_repo: 'https://github.com/sstephenson/ruby-build.git',
           install_rev: 'master',
           prefix: '/opt/ruby_build',
+          environment_variables: {},
         })
       end
 
@@ -65,6 +66,39 @@ module PoiseRuby
           # Find the last line that starts with the target version.
           cmd.stdout.split(/\n/).reverse.find {|line| line.start_with?(version_prefix) } || options['version']
         end
+      end
+
+      # Environment variables to set when running ruby-build. Only public
+      # because sigh scoping.
+      #
+      # @!visibility private
+      # @return [Hash]
+      def ruby_build_environment
+
+        # Figure out the argument to disable docs
+        disable_docs = if options['install_doc']
+          nil
+        elsif options['version'].start_with?('rbx')
+          nil # Doesn't support?
+        elsif options['version'].start_with?('ree')
+          '--no-dev-docs'
+        else
+          '--disable-install-doc'
+        end
+
+        # Start by copying the hash from options
+        environment_variables = options['environment_variables'].clone
+
+        # Figure out if we need to set or append to RUBY_CONFIGURE_OPTS
+        if disable_docs
+          if environment_variables.key?('RUBY_CONFIGURE_OPTS')
+            environment_variables['RUBY_CONFIGURE_OPTS'] << ' ' << disable_docs
+          else
+            environment_variables['RUBY_CONFIGURE_OPTS'] = disable_docs
+          end
+        end
+
+        environment_variables
       end
 
       private
@@ -175,21 +209,11 @@ module PoiseRuby
       #
       # @return [Chef::Resource::Execute]
       def build_ruby
-        # Figure out the argument to disable docs
-        disable_docs = if options['install_doc']
-          nil
-        elsif options['version'].start_with?('rbx')
-          nil # Doesn't support?
-        elsif options['version'].start_with?('ree')
-          '--no-dev-docs'
-        else
-          '--disable-install-doc'
-        end
 
         execute 'ruby-build install' do
           command [::File.join(options['prefix'], 'install', options['install_rev'], 'bin', 'ruby-build'), ruby_definition, ::File.join(options['prefix'], 'builds', new_resource.name)]
           user 'root'
-          environment 'RUBY_CONFIGURE_OPTS' => disable_docs if disable_docs
+          environment ruby_build_environment
         end
       end
 
