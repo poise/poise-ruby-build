@@ -17,21 +17,47 @@
 require 'spec_helper'
 
 describe PoiseRuby::RubyBuild::Provider do
-  step_into(:ruby_runtime)
-  recipe do
-    ruby_runtime '2' do
-      provider :ruby_build
+  describe 'default case' do
+    step_into(:ruby_runtime)
+    recipe do
+      ruby_runtime '2' do
+        provider :ruby_build
+      end
     end
-  end
-  before do
-    allow_any_instance_of(described_class).to receive(:include_recipe)
-    allow_any_instance_of(described_class).to receive(:ruby_definition).and_return('2.2.2')
+    before do
+      allow_any_instance_of(described_class).to receive(:include_recipe)
+      allow_any_instance_of(described_class).to receive(:ruby_definition).and_return('2.2.2')
+    end
+
+    it { is_expected.to create_directory('/opt/ruby_build') }
+    it { is_expected.to create_directory('/opt/ruby_build/install') }
+    it { is_expected.to create_directory('/opt/ruby_build/builds') }
+    it { is_expected.to sync_poise_git('/opt/ruby_build/install/master') }
+    # with no special options passed in, we set --disable-install-doc by default
+    it { is_expected.to run_execute('ruby-build install').with(environment: {'RUBY_CONFIGURE_OPTS' => '--disable-install-doc'}) }
+    it { is_expected.to run_execute('ruby-build install').with(command: %w{/opt/ruby_build/install/master/bin/ruby-build 2.2.2 /opt/ruby_build/builds/2}) }
+    it { is_expected.to create_file('/opt/ruby_build/builds/2/VERSION').with(content: '2.2.2') }
   end
 
-  it { is_expected.to create_directory('/opt/ruby_build') }
-  it { is_expected.to create_directory('/opt/ruby_build/install') }
-  it { is_expected.to create_directory('/opt/ruby_build/builds') }
-  it { is_expected.to sync_poise_git('/opt/ruby_build/install/master') }
-  it { is_expected.to run_execute('ruby-build install').with(command: %w{/opt/ruby_build/install/master/bin/ruby-build 2.2.2 /opt/ruby_build/builds/2}) }
-  it { is_expected.to create_file('/opt/ruby_build/builds/2/VERSION').with(content: '2.2.2') }
+  describe 'with extra environment variables' do
+    step_into(:ruby_runtime)
+    recipe do
+      ruby_runtime '2' do
+        provider :ruby_build
+        options environment_variables: {
+          'CONFIGURE_OPTS' => '--prefix=/usr/local',
+          'RUBY_CONFIGURE_OPTS' => '--with-newlib'}
+      end
+    end
+    before do
+      allow_any_instance_of(described_class).to receive(:include_recipe)
+      allow_any_instance_of(described_class).to receive(:ruby_definition).and_return('2.2.2')
+    end
+
+    # we use the CONFIGURE_OPTS that was passed in, but we concatenate the given
+    # RUBY_CONFIGURE_OPTS with the default --disable-install-doc
+    it { is_expected.to run_execute('ruby-build install').with(environment: {
+      'CONFIGURE_OPTS' => '--prefix=/usr/local',
+      'RUBY_CONFIGURE_OPTS' => '--with-newlib --disable-install-doc'}) }
+  end
 end
